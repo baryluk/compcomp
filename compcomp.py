@@ -65,7 +65,7 @@ def test_file(filename: str) -> Dict[str, Any]:
             os.unlink(output)
         except FileNotFoundError:
             pass
-        t0 = time.time()
+        t0 = time.monotonic()
         print(f"{key:20s}", filename, end=" ")
         try:
             completed_process = subprocess.run(command) #, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -73,7 +73,7 @@ def test_file(filename: str) -> Dict[str, Any]:
             print("error", e)
             # Program not installed.
             continue
-        t1 = time.time()
+        t1 = time.monotonic()
         output_size = None
         try:
             output_size = os.stat(output).st_size
