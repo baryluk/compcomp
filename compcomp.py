@@ -102,14 +102,28 @@ def run_one(filename: str, comp: Tuple[str, str, str]) -> Optional[str]:
 
     return output
 
+file_not_found_count = 0
+file_permission_count = 0
 
 def test_file(original_filename: str) -> Dict[str, Any]:
+    # global file_not_found_count, file_permission_count
+
     results = {}
-    input_size = os.stat(original_filename).st_size
+    try:
+        input_size = os.stat(original_filename).st_size
+    except FileNotFoundError:
+        global file_not_found_count
+        file_not_found_count += 1
+        return results
     # Add custom suffix, so we do not accidently use "_z" which gzip does not like.
     with tempfile.NamedTemporaryFile(suffix="compcomp") as tmp:
         filename = tmp.name
-        shutil.copyfile(original_filename, filename)
+        try:
+            shutil.copyfile(original_filename, filename)
+        except PermissionError:
+            global file_permission_count
+            file_permission_count += 1
+            return results
         for key, suffix, command in comps:
             input_size = os.stat(filename).st_size
 
@@ -223,8 +237,11 @@ def main() -> None:
             sub_total_count = 0
             sub_total_bytes = 0
             for filename in input_list:
-                sub_total_count += 1
-                sub_total_bytes += os.path.getsize(filename)
+                try:
+                    sub_total_bytes += os.path.getsize(filename)
+                    sub_total_count += 1
+                except FileNotFoundError:
+                    pass
             print(file_or_dir, sub_total_count, "files", sub_total_bytes, "bytes")
             total_count += sub_total_count
             total_bytes += sub_total_bytes
@@ -300,6 +317,12 @@ def main() -> None:
                   f"input4k: {s.total_input_size_4k}",
                   f"comp: {s.total_compressed_size} ({s.total_compressed_size / s.total_input_size * 100.0:.2f}%)",
                   f"comp4k: {s.total_compressed_size_4k} ({s.total_compressed_size_4k / s.total_input_size_4k * 100.0:.2f}%)")
+
+
+    if file_not_found_count:
+        print(f"Got FileNotFoundError for {file_not_found_count} files (broken symlink?)", file=sys.stderr)
+    if file_not_found_count:
+        print(f"Got PermissionError for {file_permission_count} files", file=sys.stderr)
 
 
     #print()
