@@ -22,7 +22,9 @@ comps = [
     *[(f"bz2-{level}",        ".bz2",    ["bzip2", "--keep", f"-{level}", "FILE"]) for level in [4, 6, 9]],
     *[(f"xz-{level}",         ".xz",     ["xz", "--keep", f"-{level}", "FILE"]) for level in [1, 3, 6, 9]],
     *[(f"lzma-{level}",       ".lzma",   ["lzma", "--keep", f"-{level}", "FILE"]) for level in [6, 9]],
+    *[(f"lzip-{level}",       ".lz",     ["lzip", "--keep", f"-{level}", "FILE"]) for level in [0, 1, 3, 6, 9]],
     *[(f"zstd-{level}",       ".zst",    ["zstd", "--quiet", "--keep", f"-{level}", "FILE"]) for level in [1, 3, 14, 16, 19]],
+    *[(f"zstd-ultra{level}",  ".zst",    ["zstd", "--quiet", "--keep", "--ultra", f"-{level}", "FILE"]) for level in [20, 21, 22]],
     # See https://bugs.debian.org/998207
     *[(f"lz4-{level}",        ".lz4",    ["lz4", "--quiet", "--keep", f"-{level}", "FILE", "FILE.lz4"]) for level in [1, 4, 9, 12]],
     *[(f"lzop-{level}",       ".lzo",    ["lzop", "--keep", f"-{level}", "FILE"]) for level in [1, 3, 7, 9]],
