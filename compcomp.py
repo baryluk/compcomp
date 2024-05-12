@@ -90,19 +90,24 @@ def run_one(filename: str, comp: Tuple[str, str, str]) -> Optional[str]:
     except FileNotFoundError:
         pass
 
+    dt = None
+
     try:
         if debug:
             print("Running:", command, file=sys.stderr)
+        t0 = time.monotonic()
         if debug:
             completed_process = subprocess.run(command)
         else:
             completed_process = subprocess.run(command, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        t1 = time.monotonic()
+        dt = t1 - t0
     except FileNotFoundError as e:
         # print("error", e)
         # Program not installed.
-        return None
+        return None, dt
 
-    return output
+    return output, dt
 
 file_not_found_count = 0
 file_permission_count = 0
@@ -134,9 +139,7 @@ def test_file(original_filename: str) -> Dict[str, Any]:
             if verbose:
                 print(f"{key:20s}", original_filename, end=" ")
 
-            t0 = time.monotonic()
-            output = run_one(filename, (key, suffix, command))
-            t1 = time.monotonic()
+            output, dt = run_one(filename, (key, suffix, command))
 
             if output is None:
                 continue
@@ -148,14 +151,14 @@ def test_file(original_filename: str) -> Dict[str, Any]:
                 continue
 
             if verbose:
-                print(f"{t1 - t0:.3f}s", output_size, f"{input_size / (t1 - t0) / 1e6:.2f}MB/s")
+                print(f"{dt:.3f} sec", output_size, f"{input_size / dt / 1e6:.2f} MB/s")
 
             try:
                 os.unlink(output)
             except FileNotFoundError:
                 print(f"{key}: Cannot unlink output {output}", file=sys.stderr)
                 continue
-            results[key] = (t1 - t0, input_size, output_size)
+            results[key] = (dt, input_size, output_size)
         return results
 
 def process_iterable(filenames):
@@ -250,14 +253,17 @@ def main() -> None:
             total_count += sub_total_count
             total_bytes += sub_total_bytes
 
-        if not stats:
+        if total_count == 0:
+            sys.stdout.flush()
             print("Found no files?", file=sys.stderr)
             return
-          
+
         import tqdm
         progress_bar = tqdm.tqdm(total=total_bytes, unit='B', unit_scale=True, unit_divisor=1000, miniters=1)
     else:
         progress_bar = None
+
+
 
     next_progress_bytes = 0
     last_reported_progress_value = -1
@@ -294,6 +300,7 @@ def main() -> None:
         progress_bar.close()
 
     if not stats:
+        sys.stdout.flush()
         print("Found no files?", file=sys.stderr)
         return
 
@@ -310,7 +317,7 @@ def main() -> None:
             s.total_input_size_4k,
             s.total_compressed_size_4k, f"{s.total_compressed_size_4k / s.total_input_size_4k * 100.0:.2f}%",
             f"{s.min_ratio4k * 100.0:.1f} - {s.max_ratio4k * 100.0:.1f}%",
-            f"{s.total_input_size / s.total_time / 1024 / 1024:2f} MiB/s",
+            f"{s.total_input_size / s.total_time / 1024 / 1024:.2f} MiB/s",
         ])
 
     headers =  ["comp", "count", "in_size", "out_size", "ratio", "min-max", "in_size4k", "out_size4k", "ratio", "min-max", "speed"]
