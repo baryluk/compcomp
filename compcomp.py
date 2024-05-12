@@ -126,6 +126,8 @@ def test_file(original_filename: str) -> Dict[str, Any]:
             global file_permission_count
             file_permission_count += 1
             return results
+        except shutil.SpecialFileError:
+            return results
         for key, suffix, command in comps:
             input_size = os.stat(filename).st_size
 
