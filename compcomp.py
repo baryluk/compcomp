@@ -332,7 +332,7 @@ def main() -> None:
 
     if file_not_found_count:
         print(f"Got FileNotFoundError for {file_not_found_count} files (broken symlink?)", file=sys.stderr)
-    if file_not_found_count:
+    if file_permission_count:
         print(f"Got PermissionError for {file_permission_count} files", file=sys.stderr)
 
 
