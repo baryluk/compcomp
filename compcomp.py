@@ -250,6 +250,10 @@ def main() -> None:
             total_count += sub_total_count
             total_bytes += sub_total_bytes
 
+        if not stats:
+            print("Found no files?", file=sys.stderr)
+            return
+          
         import tqdm
         progress_bar = tqdm.tqdm(total=total_bytes, unit='B', unit_scale=True, unit_divisor=1000, miniters=1)
     else:
@@ -289,6 +293,9 @@ def main() -> None:
     if progress_bar:
         progress_bar.close()
 
+    if not stats:
+        print("Found no files?", file=sys.stderr)
+        return
 
     longest_key = max(len(key) for key in stats.keys())
 
